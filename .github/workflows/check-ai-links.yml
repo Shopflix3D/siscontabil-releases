@@ -20,7 +20,7 @@ jobs:
         shell: python
         run: |
           import json, urllib.request, urllib.error, os
-          catalog = json.load(open('ai-models.json', encoding='utf-8'))
+          catalog = json.load(open('ai-models.json', encoding='utf-8-sig'))
           broken, report = [], []
           for m in catalog['models']:
               working = 0
