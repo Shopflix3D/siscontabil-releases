@@ -1,0 +1,34 @@
+﻿{
+  "version": 1,
+  "updated": "2026-11-12",
+  "models": [
+    {
+      "id": "qwen3-1.7b-q4",
+      "name": "Qwen3 1.7B (leve, recomendado)",
+      "publisher": "Alibaba Qwen",
+      "license": "Apache-2.0",
+      "licenseUrl": "https://huggingface.co/Qwen/Qwen3-1.7B/blob/main/LICENSE",
+      "sizeMb": 1100,
+      "minRamGb": 4,
+      "sha256": "",
+      "files": [
+        { "repo": "unsloth/Qwen3-1.7B-GGUF", "revision": "main", "file": "Qwen3-1.7B-Q4_K_M.gguf" },
+        { "repo": "bartowski/Qwen_Qwen3-1.7B-GGUF", "revision": "main", "file": "Qwen_Qwen3-1.7B-Q4_K_M.gguf" }
+      ]
+    },
+    {
+      "id": "qwen3-4b-q4",
+      "name": "Qwen3 4B (melhor qualidade, exige PC mais forte)",
+      "publisher": "Alibaba Qwen",
+      "license": "Apache-2.0",
+      "licenseUrl": "https://huggingface.co/Qwen/Qwen3-4B/blob/main/LICENSE",
+      "sizeMb": 2500,
+      "minRamGb": 8,
+      "sha256": "",
+      "files": [
+        { "repo": "unsloth/Qwen3-4B-GGUF", "revision": "main", "file": "Qwen3-4B-Q4_K_M.gguf" },
+        { "repo": "bartowski/Qwen_Qwen3-4B-GGUF", "revision": "main", "file": "Qwen_Qwen3-4B-Q4_K_M.gguf" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+﻿# Verifica semanalmente todos os links de ai-models.json. Nao baixa nada: so requisicoes HEAD.
+# Se um link quebrar, o job falha -> GitHub manda e-mail e abre uma issue com os detalhes.
+name: Check AI model links
+on:
+  schedule:
+    - cron: '17 11 * * 1'
+  workflow_dispatch:
+  push:
+    paths: ['ai-models.json']
+permissions:
+  contents: read
+  issues: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check links and published SHA-256
+        id: check
+        shell: python
+        run: |
+          import json, urllib.request, urllib.error, os
+          catalog = json.load(open('ai-models.json', encoding='utf-8'))
+          broken, report = [], []
+          for m in catalog['models']:
+              working = 0
+              for f in m['files']:
+                  url = f.get('url') or f"https://huggingface.co/{f['repo']}/resolve/{f.get('revision','main')}/{f['file']}"
+                  req = urllib.request.Request(url, method='HEAD', headers={'User-Agent': 'SisContabil-link-check'})
+                  class NoRedirect(urllib.request.HTTPRedirectHandler):
+                      def redirect_request(self, *a, **k): return None
+                  opener = urllib.request.build_opener(NoRedirect)
+                  try:
+                      r = opener.open(req, timeout=30); code = r.status; headers = r.headers
+                  except urllib.error.HTTPError as e:
+                      code = e.code; headers = e.headers
+                  except Exception as e:
+                      code = 0; headers = {}
+                  sha = (headers.get('X-Linked-ETag') or '').strip('"')
+                  ok = code in (200, 302, 307) and len(sha) == 64
+                  pinned = m.get('sha256') or ''
+                  if ok and pinned and pinned.lower() != sha.lower():
+                      ok = False; code = f'{code} (SHA-256 mudou)'
+                  report.append(f"{'OK ' if ok else 'ERRO'} {m['id']}  {url}  [{code}]")
+                  working += ok
+                  if not ok: broken.append(f"- `{m['id']}`: {url} -> {code}")
+              if working == 0: broken.append(f"- **{m['id']} sem nenhum link funcionando**")
+          print('\n'.join(report))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write('broken<<EOF\n' + '\n'.join(broken) + '\nEOF\n')
+          if broken: raise SystemExit(1)
+      - name: Open issue when a link is broken
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `A verificacao semanal encontrou links de modelo com problema:\n\n${{ toJSON(steps.check.outputs.broken) }}\n\nCorrija editando \`ai-models.json\` (troque o repositorio/arquivo ou adicione outro espelho). Os programas instalados pegam a correcao em "Verificar atualizacoes".`;
+            await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title: 'Link de modelo de IA quebrado', body });
